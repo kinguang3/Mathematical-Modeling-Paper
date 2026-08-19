@@ -26,7 +26,3 @@
 ## 许可
 
 MIT License
-
-## 作者
-
-kinguang3 · https://github.com/kinguang3
