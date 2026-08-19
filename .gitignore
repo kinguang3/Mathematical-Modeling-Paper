@@ -32,8 +32,10 @@ build/
 logs/
 
 # Data directories (keep raw data, exclude results)
-data/results/
-!data/results/.gitkeep
+**/data/results/
+!**/data/results/.gitkeep
+**/data/processed/
+!**/data/processed/.gitkeep
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/
@@ -49,6 +51,12 @@ data/results/
 *.fls
 *.fdb_latexmk
 
+# Generated result files (Crop-Planting-Optimization-2024)
+*_python运行结果.xlsx
+*_蒙特卡洛_CVaR结果.xlsx
+*_蒙特卡洛_CVaR结果*.xlsx
+
 # PDF outputs
 *.pdf
-!paper/final_paper.pdf
+!**/paper/final_paper.pdf
+!**/paper/论文.pdf

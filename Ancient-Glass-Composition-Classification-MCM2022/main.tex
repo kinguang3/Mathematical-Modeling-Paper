@@ -1,0 +1,693 @@
+% !TeX program = xelatex
+% 2022 C题：古代玻璃制品的成分分析与鉴别
+% 编译：xelatex main.tex（连续运行两次）
+\documentclass[UTF8,a4paper,zihao=-4,fontset=windows]{ctexart}
+
+\usepackage[left=2.50cm,right=2.50cm,top=2.50cm,bottom=2.50cm,
+            headheight=14pt,footskip=0.48cm]{geometry}
+\usepackage{amsmath,amssymb,bm,mathtools}
+\usepackage{booktabs,multirow,array,tabularx,longtable}
+\usepackage{graphicx,float,placeins}
+\usepackage[font=small,labelfont=normalfont,labelsep=quad]{caption}
+\usepackage{subcaption}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{url}
+\usepackage[hidelinks,unicode]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+% 参照优秀论文：中文宋体/黑体，西文 Times New Roman。
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Consolas}
+\setCJKmainfont{SimSun}
+\setCJKsansfont{SimHei}
+\setCJKmonofont{FangSong}
+
+\graphicspath{{figures/}}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\linespread{1.25}
+\setlist{nosep,leftmargin=2.2em}
+\setlist[enumerate,1]{label=（\arabic*）}
+\setlength{\abovedisplayskip}{6pt plus 2pt minus 2pt}
+\setlength{\belowdisplayskip}{6pt plus 2pt minus 2pt}
+\setlength{\abovecaptionskip}{4pt}
+\setlength{\belowcaptionskip}{2pt}
+\captionsetup[table]{position=top,skip=4pt}
+\captionsetup[figure]{position=bottom,skip=4pt}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+
+\ctexset{
+  section={format=\centering\heiti\zihao{4},number=\chinese{section}、,
+           beforeskip=1.25ex plus .3ex,afterskip=.75ex plus .2ex},
+  subsection={format=\heiti\zihao{-4},number=\arabic{section}.\arabic{subsection},
+              beforeskip=.9ex plus .2ex,afterskip=.35ex},
+  subsubsection={format=\heiti\zihao{-4},number=\arabic{section}.\arabic{subsection}.\arabic{subsubsection},
+                 beforeskip=.7ex,afterskip=.25ex}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\raisebox{5pt}{\zihao{5}-\ \thepage\ -}}
+\setlength{\footskip}{18pt}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{12pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.90}
+\renewcommand{\textfraction}{0.06}
+\renewcommand{\floatpagefraction}{0.78}
+\setlength{\textfloatsep}{12pt plus 2pt minus 2pt}
+\setlength{\floatsep}{10pt plus 2pt minus 2pt}
+
+\definecolor{paperblue}{RGB}{31,78,121}
+\definecolor{papergray}{RGB}{245,247,249}
+\newcommand{\keywords}[1]{\par\noindent\textbf{关键词：}#1}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\clr}{\operatorname{clr}}
+\newcommand{\ilr}{\operatorname{ilr}}
+\newcommand{\Clo}{\mathcal{C}}
+\newcommand{\argmin}{\operatorname*{arg\,min}}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\crefname{figure}{图}{图}
+\crefname{table}{表}{表}
+\crefname{equation}{式}{式}
+\crefname{section}{节}{节}
+\floatname{algorithm}{算法}
+\algrenewcommand\algorithmicrequire{\textbf{输入：}}
+\algrenewcommand\algorithmicensure{\textbf{输出：}}
+\renewcommand{\lstlistingname}{代码}
+
+\lstset{
+  basicstyle=\ttfamily\zihao{6},
+  keywordstyle=\color{paperblue},
+  commentstyle=\color{gray},
+  numbers=left,numberstyle=\tiny,stepnumber=1,
+  frame=single,breaklines=true,showstringspaces=false,
+  columns=fullflexible,keepspaces=true
+}
+
+\begin{document}
+
+\begin{center}
+  \vspace*{-0.50cm}
+  {\heiti\zihao{3}基于成分数据几何与分层验证的古代玻璃制品成分分析与鉴别\par}
+\end{center}
+
+\vspace{0.65em}
+\begin{center}
+\begin{minipage}{0.94\textwidth}
+\begin{center}{\heiti\zihao{4}摘\quad 要}\end{center}
+\hspace*{2em}古代玻璃在埋藏环境中发生风化后，其表面化学组成会偏离原始配方，使类型鉴别、工艺解释与来源推断面临共同干扰。针对题目给出的58件已知类型文物、69个采样点和8件未知样品，本文建立“数据质控—风化关联—成分复原—类型判别—亚类识别—关联比较”的分层建模框架。预处理阶段依据成分总和为85\%--105\%的规则保留67个有效采样点，并将文物层面的外观属性与采样点层面的化学组成分开建模；对于具有闭合约束的比例数据，采用乘性零值替代、闭合校正和中心化对数比（CLR）变换。
+
+\hspace*{2em}针对问题一，在58件文物层面实施置换卡方检验与Fisher精确检验。玻璃类型与风化显著相关（置换$p=0.012$，Cram\'{e}r's $V=0.344$），铅钡玻璃相对高钾玻璃的风化优势比为4.67（95\%置信区间1.42--15.35）；纹饰仅呈趋势，颜色未显示显著关联。风化后，高钾玻璃的$\mathrm{SiO_2}$均值由69.16\%升至94.33\%，$\mathrm{K_2O}$由9.77\%降至0.54\%；铅钡玻璃则表现为$\mathrm{SiO_2}$下降、$\mathrm{PbO}$与$\mathrm{P_2O_5}$相对富集。进一步在CLR空间估计同类型平均风化位移并逆变换复原原始组成；对49号和50号两件配对文物作留一文物验证，平均Aitchison距离由组均值基线的4.79降至2.94。
+
+\hspace*{2em}针对问题二，以可解释性判别与多变量核验相结合。已知样品中高钾玻璃$\mathrm{PbO}$最大值为1.636\%，铅钡玻璃最小值为10.519\%，据此构造6.078\%阈值；留一文物交叉验证与分层分组五折随机森林均达到100\%准确率。亚类分析中，高钾玻璃基于$\mathrm{SiO_2}$、$\mathrm{K_2O}$、$\mathrm{CaO}$和$\mathrm{Al_2O_3}$分为2类，轮廓系数为0.587；铅钡玻璃基于$\mathrm{SiO_2}$、$\mathrm{PbO}$、$\mathrm{BaO}$和$\mathrm{CuO}$选取3类，轮廓系数为0.503。虽然$k=4$的轮廓系数略高至0.512，但综合簇规模、配方解释和扰动稳定性，$k=3$是更简约的折中。两类聚类的扰动ARI中位数均为1。
+
+\hspace*{2em}针对问题三，阈值模型与随机森林一致判定A1、A6、A7为高钾玻璃，其余5件为铅钡玻璃；在$\pm20\%$乘性成分扰动下，8件样品均无标签翻转。针对问题四，对9种主要成分计算CLR-Spearman相关矩阵，两类矩阵差异的置换检验为$p=0.005$，表明其相对成分关联结构存在显著差异。所建框架在保持解释性的同时控制了闭合效应、重复采样泄漏与小样本不确定性，可为古代玻璃的类型鉴别和风化溯源提供定量依据。
+
+\keywords{古代玻璃；成分数据；CLR变换；风化复原；随机森林；K-means；敏感性分析}
+\end{minipage}
+\end{center}
+\newpage
+
+\section{问题重述}
+
+古代玻璃的主要原料是石英砂，助熔剂与稳定剂的来源决定了不同配方体系。中国古代常见的高钾玻璃以含钾植物灰等物质助熔，铅钡玻璃则具有较高的铅、钡氧化物含量。玻璃长期处于土壤、水分和盐类共同作用下，其表面可能发生选择性溶蚀与相对富集，使检测值同时包含“原始配方”和“风化改造”两类信息。
+
+附件给出三组数据：表单1记录58件文物的类型、纹饰、颜色和表面风化情况；表单2记录69个采样点的14种化学成分，其中同一件文物可能具有多个部位；表单3给出8件未知类型样品。本文需要完成以下任务：
+
+\begin{enumerate}
+  \item 分析风化与玻璃类型、纹饰、颜色及化学成分之间的关系，并依据风化点预测其风化前成分；
+  \item 总结高钾玻璃与铅钡玻璃的分类规律，在各类型内部选择合适指标划分亚类，并检验亚类合理性和敏感性；
+  \item 鉴别8件未知样品的类型，并分析结果对化学成分扰动的敏感程度；
+  \item 分别研究两类玻璃内部化学成分之间的关联关系，并比较关联结构的差异。
+\end{enumerate}
+
+题目的关键不只是选择分类器。首先，一件文物可能对应多个测量点，若将采样点当作彼此独立的文物，会使多测点文物获得过高权重并造成交叉验证泄漏。其次，14种成分比例之和受到约束，常规欧氏距离和原始比例相关可能产生闭合效应。最后，样本规模有限且风化前后的直接配对点稀少，因此所有结论都需要给出与证据强度匹配的验证和边界。
+
+\section{问题分析}
+
+\subsection{问题一的分析}
+
+外观属性和表面风化均在文物层面定义，因此关联检验应以58件文物构造列联表，不能把表单2中的多采样点重复计数。颜色类别较多、部分期望频数偏小，单独依赖渐近卡方分布可能不稳，故采用置换$p$值，并对类型的$2\times2$表补充Fisher精确检验和优势比。
+
+化学成分变化属于采样点层面。为避免同一文物同一状态的多个部位形成伪重复，先在“文物编号—局部风化状态”内取成分均值。风化会同时改变多个相对成分，若逐成分独立回归，预测和可能偏离100\%，并忽略成分间约束。本文因而在CLR空间估计风化引起的整体位移，再逆变换回百分比空间。
+
+\subsection{问题二的分析}
+
+类型判别应兼顾“便于解释”和“多变量稳健”。先考察单一成分在两类样本间是否形成无重叠间隔，据此建立可直接使用的阈值规则；再以14种成分训练随机森林作交叉核验。验证划分必须以文物编号为组，使同件文物的不同点不能同时进入训练集和验证集。
+
+亚类划分的目标是揭示同一玻璃类型内部的配方与风化差异，而不是重复完成高钾/铅钡二分类。因此，指标选择遵循“配方含义明确、能够区分组内中心、维度不过高”的原则，再用轮廓系数、扰动ARI和尺度替换共同评价聚类。
+
+\subsection{问题三的分析}
+
+未知样品先用阈值规则给出透明的类别结论，再用已训练随机森林输出铅钡概率。敏感性不能只对参数作形式化微扰，而应模拟检测值的相对误差：对每个成分乘以独立随机因子，重新闭合至100\%，观察阈值规则和随机森林相对基准标签的翻转率，并逐级扩大扰动直至发现最脆弱样品。
+
+\subsection{问题四的分析}
+
+不同成分之间的原始比例相关可能仅由总和约束产生。本文先进行零值替代与CLR变换，再在两类样品中计算Spearman秩相关。比较时不只挑选个别系数，而以两类相关矩阵上三角元素差的范数作为总体统计量，通过标签置换检验整体差异是否超出随机波动。
+
+\section{模型假设}
+
+为使问题可计算，并限制结论的适用范围，作如下假设：
+
+\begin{enumerate}
+  \item 附件中的玻璃类型、表面风化和采样点文字标记总体可靠；“严重风化点”并入风化组，但在解释中承认其不确定性更高。
+  \item 空白成分表示未检出，可在质控时按0处理；成分总和不在85\%--105\%内的采样点缺少足够质量平衡，不参加定量建模。
+  \item 同一玻璃类型存在可估计的平均风化位移；不同埋藏环境和个体差异被视为围绕该位移的随机偏差。
+  \item 8件未知样品与已知样品来自相近的原料体系和检测流程，不存在训练样本之外的第三类玻璃。
+  \item 敏感性分析中的乘性误差可近似描述相对检测误差；扰动后重新闭合，以保持成分和为100\%。
+\end{enumerate}
+
+\section{符号说明}
+
+\begin{table}[H]
+\centering
+\caption{主要符号及其含义}
+\label{tab:symbols}
+\begin{tabularx}{0.91\textwidth}{cX}
+\toprule
+符号 & 含义 \\
+\midrule
+$x_{ic}$ & 第$i$个采样点中第$c$种成分经闭合后的比例 \\
+$D$ & 化学成分维数，本文$D=14$ \\
+$\Clo(\bm{x})$ & 闭合算子，使向量各元素非负且总和为100\% \\
+$\clr(\bm{x})$ & 中心化对数比变换 \\
+$\bm{\Delta}_g$ & 类型$g$在CLR空间中的平均风化位移向量 \\
+$\rho_{jk}^{(g)}$ & 类型$g$中成分$j$与$k$的Spearman相关系数 \\
+$S(k)$ & 聚类数为$k$时的平均轮廓系数 \\
+$\operatorname{ARI}$ & 调整兰德指数，用于比较两次聚类划分的一致性 \\
+$\varepsilon$ & 未知样品敏感性分析的相对扰动幅度 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{数据预处理与总体框架}
+
+\subsection{数据质控与层级划分}
+
+表单1共含58件文物，其中高钾玻璃18件、铅钡玻璃40件；风化34件、无风化24件。表单2原有69个采样点，逐行计算14种成分之和
+\begin{equation}
+  T_i=\sum_{c=1}^{D}x_{ic}^{\mathrm{raw}}.
+\end{equation}
+15号和17号样品的$T_i$分别为79.47\%和71.89\%，低于题设85\%下限，故剔除，最终保留67个有效采样点。表单3的8件未知样品均满足有效性要求。
+
+本文明确区分两种分析单位：外观属性关联以“文物”为单位；化学模型以“有效采样点”为单位。对风化成分的组间比较，则先在同一文物、同一局部状态内求均值，得到58条“文物—状态”平衡记录，以避免某件文物因多测点而被重复加权。
+
+\subsection{闭合校正与零值替代}
+
+将空白项暂记为0后，对每个有效成分向量实施闭合：
+\begin{equation}
+  \Clo(\bm{x})=100\frac{\bm{x}}{\sum_{c=1}^{D}x_c}.
+  \label{eq:closure}
+\end{equation}
+闭合数据位于$D-1$维单纯形而非普通欧氏空间；任一成分相对增加都会迫使其他成分比例下降。为使含0向量能够作对数变换，采用乘性零值替代。设一行中有$m$个零值，以$\delta$替代这些零值，并将正值按同一比例缩放：
+\begin{equation}
+  x_c^{*}=\begin{cases}
+  \delta, & x_c=0,\\[2mm]
+  x_c\displaystyle\frac{1-m\delta}{\sum_{x_j>0}x_j}, & x_c>0,
+  \end{cases}
+  \qquad
+  \delta=\min\left(5\times10^{-4},\,0.65x_{\min}^{+},\,\frac{0.9}{m}\right).
+  \label{eq:zero}
+\end{equation}
+这样既保留未检出信息的“小量”含义，又避免替代总量挤占已有成分。
+
+\subsection{CLR变换与距离}
+
+对替代后的组成$\bm{x}^{*}$作CLR变换：
+\begin{equation}
+  \clr(\bm{x})_c=\ln\frac{x_c^{*}}{g(\bm{x}^{*})},
+  \qquad
+  g(\bm{x}^{*})=\left(\prod_{c=1}^{D}x_c^{*}\right)^{1/D}.
+  \label{eq:clr}
+\end{equation}
+其逆变换为
+\begin{equation}
+  \clr^{-1}(\bm{z})_c=100\frac{\exp(z_c)}{\sum_{j=1}^{D}\exp(z_j)}.
+  \label{eq:invclr}
+\end{equation}
+在CLR空间中，两个组成的欧氏距离等价于Aitchison几何下的距离表示：
+\begin{equation}
+  d_A(\bm{x},\bm{y})=\left\|\clr(\bm{x})-\clr(\bm{y})\right\|_2.
+  \label{eq:aitchison}
+\end{equation}
+分类阈值和考古解释仍在百分比空间表达；风化复原和相关结构在CLR空间估计，从而兼顾可解释性与成分几何合理性。
+
+\subsection{总体建模流程}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{fig1_workflow.pdf}
+\caption{古代玻璃成分分析的分层稳健建模框架}
+\label{fig:workflow}
+\end{figure}
+
+如\cref{fig:workflow}所示，本文从统一质控出发，将四问映射为相互校验而又边界清楚的模型：问题一提供风化规律和复原组成；问题二建立类型与亚类模型；问题三以扰动试验检验外推样品；问题四从关联网络层面补充类型差异。所有随机过程统一固定种子20220818，以保证可复现性。
+
+\section{模型建立与求解}
+
+\subsection{问题一：风化关联及风化前成分复原}
+
+\subsubsection{外观属性与风化的列联检验}
+
+对因素$F$（类型、纹饰或颜色）与二元风化状态$W$构造列联表，Pearson统计量为
+\begin{equation}
+  \chi^2=\sum_{r}\sum_{s}\frac{(O_{rs}-E_{rs})^2}{E_{rs}},
+  \qquad E_{rs}=\frac{O_{r\cdot}O_{\cdot s}}{N}.
+  \label{eq:chi2}
+\end{equation}
+考虑小期望频数，固定因素标签并随机置换风化标签$B=5000$次，经验$p$值写为
+\begin{equation}
+  p_{\mathrm{perm}}=\frac{1+\sum_{b=1}^{B}I(\chi_b^2\geq\chi_{\mathrm{obs}}^2)}{B+1}.
+  \label{eq:permp}
+\end{equation}
+关联强度用Cram\'{e}r's $V$表示：
+\begin{equation}
+  V=\sqrt{\frac{\chi^2/N}{\min(r-1,s-1)}}.
+\end{equation}
+
+\begin{table}[htbp]
+\centering
+\caption{表面风化与文物属性的关联检验}
+\label{tab:association}
+\begin{tabular}{lccccc}
+\toprule
+因素 & $\chi^2$ & 自由度 & 置换$p$ & Cram\'{e}r's $V$ & 判断 \\
+\midrule
+类型 & 6.880 & 1 & 0.012 & 0.344 & 显著相关 \\
+纹饰 & 4.957 & 2 & 0.112 & 0.292 & 仅呈趋势 \\
+颜色 & 9.432 & 8 & 0.319 & 0.403 & 未达显著 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+类型与风化关系最稳定：高钾玻璃风化率为$6/18=33.3\%$，铅钡玻璃为$28/40=70.0\%$。对$2\times2$表补充Fisher精确检验，得到铅钡玻璃相对高钾玻璃的风化优势比
+\begin{equation}
+  \operatorname{OR}=\frac{28/12}{6/12}=4.667,
+\end{equation}
+其95\%置信区间为1.419--15.350，Fisher精确检验$p=0.0113$。纹饰B的6件文物均发生风化，但总样本太小，整体置换$p=0.112$，不能据此下确定结论；颜色置换$p=0.319$，未发现稳定关联。
+
+\subsubsection{风化前后成分差异}
+
+对同一类型、同一成分的无风化组与风化组采用Mann--Whitney $U$检验，并对14个成分的$p$值作Benjamini--Hochberg校正；同时报告均值差和Cliff's $\delta$，避免只用显著性代替效应大小。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{fig2_weathering.pdf}
+\caption{文物属性与风化比例、两类玻璃的关键成分位移及配对复原误差}
+\label{fig:weathering}
+\end{figure}
+
+高钾玻璃风化后$\mathrm{SiO_2}$均值由69.16\%升至94.33\%，$\mathrm{K_2O}$由9.77\%降至0.54\%，$\mathrm{CaO}$、$\mathrm{Al_2O_3}$和$\mathrm{Fe_2O_3}$也同步降低，表现为碱金属及伴生组分相对淋失、硅相对富集。铅钡玻璃呈现另一结构：$\mathrm{SiO_2}$由56.93\%降至27.76\%，$\mathrm{PbO}$由21.84\%升至44.98\%，$\mathrm{P_2O_5}$由1.17\%升至5.10\%。这些是相对组成变化；仅凭附件不能区分绝对迁入、绝对流失和体积变化，故本文不将统计结果直接解释为微观反应机制。
+
+\subsubsection{CLR平均位移复原模型}
+
+设玻璃类型$g\in\{\text{高钾},\text{铅钡}\}$的无风化、风化样品在CLR空间的均值分别为$\bm{\mu}_{g,u}$和$\bm{\mu}_{g,w}$，定义平均风化位移
+\begin{equation}
+  \bm{\Delta}_g=\bm{\mu}_{g,w}-\bm{\mu}_{g,u}.
+  \label{eq:delta}
+\end{equation}
+对任一风化点$\bm{x}_{w}$，其风化前组成估计为
+\begin{equation}
+  \widehat{\bm{x}}_{u}
+  =\clr^{-1}\!\left[\clr(\bm{x}_{w})-\bm{\Delta}_g\right].
+  \label{eq:restore}
+\end{equation}
+\cref{eq:restore}把14种成分作为整体平移，预测值天然非负且和为100\%。对49号、50号文物同时具有风化点和未风化点的情况，验证时删除该文物的全部记录后重新估计$\bm{\Delta}_g$，以防使用目标文物本身的信息。
+
+\begin{table}[htbp]
+\centering
+\caption{CLR风化复原模型的留一文物配对验证}
+\label{tab:restore}
+\begin{tabular}{ccccc}
+\toprule
+文物编号 & 模型MAE & 组均值MAE & 模型Aitchison距离 & 组均值Aitchison距离 \\
+\midrule
+49 & 1.62 & 1.36 & 2.47 & 4.46 \\
+50 & 2.02 & 2.56 & 3.40 & 5.12 \\
+\midrule
+均值 & 1.82 & 1.96 & 2.94 & 4.79 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+模型的平均MAE略优于组均值基线，更关键的是Aitchison距离下降38.7\%，说明预测在相对成分结构上更接近真实未风化点。不过，直接配对验证仅有两件文物，这一结果只能支持方法合理性，不能视为稳定的总体误差上界。
+
+\subsection{问题二：类型判别规律与亚类划分}
+
+\subsubsection{可解释的PbO阈值模型}
+
+67个有效采样点中，高钾玻璃$\mathrm{PbO}$最大值为1.636\%，铅钡玻璃最小值为10.519\%，两类之间存在8.883个百分点的空档。取两端中点定义阈值
+\begin{equation}
+  \tau=\frac{\max(\mathrm{PbO}\mid\text{高钾})+
+  \min(\mathrm{PbO}\mid\text{铅钡})}{2}=6.0778\%.
+\end{equation}
+因此判别规则为
+\begin{equation}
+  \widehat{y}=\begin{cases}
+    \text{高钾},& \mathrm{PbO}\leq6.0778\%,\\
+    \text{铅钡},& \mathrm{PbO}>6.0778\%.
+  \end{cases}
+  \label{eq:threshold}
+\end{equation}
+这里选择$\mathrm{PbO}$而非$\mathrm{K_2O}$，是因为高钾玻璃风化后$\mathrm{K_2O}$可接近0；“高钾”是配方类型名称，并不意味着每个风化点都保留高钾含量。
+
+采用留一文物交叉验证：每次删除一件文物的全部采样点，在其余文物上重新估计$\tau$，再预测被删除文物。67个采样点均正确，58次训练阈值位于5.973\%--6.981\%。这一结果表明附件样本内部存在清晰分离，但不应外推为任意地区、任意时期玻璃的普适常数。
+
+\subsubsection{随机森林核验}
+
+以14种闭合后成分为输入，以玻璃类型为输出，建立500棵树的随机森林。每个节点在随机特征子集中选择使Gini不纯度下降最大的切分：
+\begin{equation}
+  G(t)=1-\sum_{k=1}^{2}p_{k\mid t}^{,2},\qquad
+  \Delta G=G(t)-\frac{n_L}{n_t}G(t_L)-\frac{n_R}{n_t}G(t_R).
+\end{equation}
+使用分层分组五折交叉验证，组变量为文物编号；准确率、平衡准确率和F1均为1.000，混淆矩阵中18个高钾点和49个铅钡点均被正确识别。特征重要性以$\mathrm{PbO}$最高，其次为$\mathrm{BaO}$、$\mathrm{SrO}$和$\mathrm{SiO_2}$，从多变量角度支持阈值结论。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{fig3_classification.pdf}
+\caption{玻璃类型的PbO判别边界、随机森林特征重要性与分组验证}
+\label{fig:classification}
+\end{figure}
+
+\subsubsection{亚类指标选择与K-means模型}
+
+高钾玻璃选取$\mathrm{SiO_2}$、$\mathrm{K_2O}$、$\mathrm{CaO}$和$\mathrm{Al_2O_3}$，分别反映玻璃基质、含钾助熔成分和主要伴生稳定组分；铅钡玻璃选取$\mathrm{SiO_2}$、$\mathrm{PbO}$、$\mathrm{BaO}$和$\mathrm{CuO}$，反映基质、铅钡助熔体系及铜着色/伴生成分。对所选指标作Z-score标准化
+\begin{equation}
+  z_{ij}=\frac{x_{ij}-\bar{x}_j}{s_j},
+\end{equation}
+再使用K-means算法最小化簇内平方和
+\begin{equation}
+  \min_{C_1,\ldots,C_k}\sum_{h=1}^{k}\sum_{\bm{z}_i\in C_h}
+  \left\|\bm{z}_i-\bm{\mu}_h\right\|_2^2.
+  \label{eq:kmeans}
+\end{equation}
+平均轮廓系数\cite{kaufman1990}为
+\begin{equation}
+  S(k)=\frac{1}{n}\sum_{i=1}^{n}\frac{b(i)-a(i)}{\max\{a(i),b(i)\}},
+\end{equation}
+其中$a(i)$为样本与本簇其他点的平均距离，$b(i)$为其到最近其他簇的平均距离。
+
+高钾玻璃在$k=2$时轮廓系数达到0.587。铅钡玻璃在$k=4$时轮廓系数0.512，为纯数值最大值；$k=3$时为0.503，仅低0.009。检查中心与簇规模发现，第4簇主要继续切分已有风化簇，样本更少且未形成新的稳定配方特征。因此本文将$k=3$作为“数值分离—解释性—简约性”的折中，而不宣称其为唯一最优聚类数。
+
+\begin{table}[htbp]
+\centering
+\caption{两类玻璃的亚类中心及解释（单位：\%）}
+\label{tab:clusters}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrl}
+\toprule
+亚类 & $n$ & $\mathrm{SiO_2}$ & $\mathrm{K_2O/PbO}$ & $\mathrm{CaO/BaO}$ & $\mathrm{Al_2O_3/CuO}$ & 风化占比 & 解释 \\
+\midrule
+HK1 & 9  & 90.3 & 2.0  & 1.3  & 2.8 & 66.7\% & 高硅低钾，风化型 \\
+HK2 & 9  & 64.9 & 11.0 & 6.5  & 7.5 & 0.0\%  & 中硅高钾，未风化配方型 \\
+LB1 & 20 & 59.5 & 20.8 & 7.3  & 1.0 & 5.0\%  & 中铅中钡，近未风化型 \\
+LB2 & 22 & 27.5 & 49.2 & 8.4  & 1.3 & 90.9\% & 高铅低硅，强风化型 \\
+LB3 & 7  & 22.6 & 26.8 & 28.4 & 6.7 & 71.4\% & 高钡高铜，配方差异型 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+HK1与HK2的主要差别和风化高度一致。铅钡LB1几乎均未风化，LB2以高铅低硅和高风化率为特征；LB3同时具有高$\mathrm{BaO}$和高$\mathrm{CuO}$，其差异不能只由风化解释，更可能保留了原料或着色工艺信号。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{fig4_clustering.pdf}
+\caption{亚类数选择、PCA投影、亚类中心画像及聚类稳定性}
+\label{fig:clustering}
+\end{figure}
+
+\subsection{问题三：未知样品鉴别与敏感性分析}
+
+\subsubsection{未知样品的类型判定}
+
+将8件未知样品先按\cref{eq:threshold}判断，再输入随机森林，两种模型结论完全一致，结果见\cref{tab:unknown}。A1、A6、A7为高钾玻璃；A2、A3、A4、A5、A8为铅钡玻璃。A5的$\mathrm{PbO}$为12.28\%，在未知样品中距离阈值最近，故是敏感性分析的重点。
+
+\begin{table}[htbp]
+\centering
+\caption{8件未知样品的类型鉴别结果（成分单位：\%）}
+\label{tab:unknown}
+\begin{tabular}{cccccccc}
+\toprule
+样品 & 风化状态 & $\mathrm{SiO_2}$ & $\mathrm{K_2O}$ & $\mathrm{PbO}$ & $\mathrm{BaO}$ & 判定 & $P(\text{铅钡})$ \\
+\midrule
+A1 & 无风化 & 78.86 & 0.00 & 0.00 & 0.00 & 高钾 & 0.040 \\
+A2 & 风化   & 39.21 & 0.00 & 35.63 & 0.00 & 铅钡 & 0.834 \\
+A3 & 无风化 & 32.28 & 1.37 & 39.99 & 4.74 & 铅钡 & 0.892 \\
+A4 & 无风化 & 36.95 & 0.82 & 25.29 & 8.66 & 铅钡 & 0.930 \\
+A5 & 风化   & 64.54 & 0.37 & 12.28 & 2.17 & 铅钡 & 0.822 \\
+A6 & 风化   & 94.02 & 1.36 & 0.00 & 0.00 & 高钾 & 0.004 \\
+A7 & 风化   & 91.16 & 0.98 & 0.00 & 0.00 & 高钾 & 0.014 \\
+A8 & 无风化 & 51.13 & 0.23 & 21.24 & 11.34 & 铅钡 & 0.996 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{闭合约束下的蒙特卡洛加压试验}
+
+对未知样品$i$的第$c$种成分，在扰动幅度$\varepsilon$下生成
+\begin{equation}
+  x_{ic}^{(b)}=\Clo\!\left(x_{ic}u_{ic}^{(b)}\right),
+  \qquad u_{ic}^{(b)}\sim U(1-\varepsilon,1+\varepsilon).
+  \label{eq:perturb}
+\end{equation}
+令基准标签为$\widehat y_i^{(0)}$，每个非零幅度重复500次，翻转率为
+\begin{equation}
+  r_i(\varepsilon)=\frac{1}{500}\sum_{b=1}^{500}
+  I\!\left(\widehat y_i^{(b)}\neq\widehat y_i^{(0)}\right).
+\end{equation}
+扰动幅度从5\%递增到60\%。在题目通常关注的$\pm20\%$范围内，8件样品的阈值模型和随机森林翻转率均为0。继续加压后，A5约从40\%扰动开始出现少量随机森林翻转，60\%时仍低于10\%；其余7件保持稳定。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{fig5_unknown_sensitivity.pdf}
+\caption{未知样品的判别裕度与逐级乘性扰动敏感性}
+\label{fig:unknown}
+\end{figure}
+
+\subsection{问题四：两类玻璃的成分关联结构}
+
+\subsubsection{CLR-Spearman相关矩阵}
+
+选择$\mathrm{SiO_2}$、$\mathrm{K_2O}$、$\mathrm{CaO}$、$\mathrm{Al_2O_3}$、$\mathrm{Fe_2O_3}$、$\mathrm{CuO}$、$\mathrm{PbO}$、$\mathrm{BaO}$和$\mathrm{P_2O_5}$共9种主要成分。对67个有效采样点的14维组成统一作CLR变换，再在每类玻璃内部计算9维Spearman相关：
+\begin{equation}
+  \rho_{jk}^{(g)}=\operatorname{corr}_{\mathrm{Spearman}}
+  \left(Z_j^{(g)},Z_k^{(g)}\right),\qquad Z=\clr(X).
+\end{equation}
+Spearman系数依赖秩而非正态分布，适合小样本和偏态成分；CLR则缓解闭合造成的虚假相关。
+
+\subsubsection{相关矩阵整体差异的置换检验}
+
+设高钾、铅钡相关矩阵分别为$R_H,R_L$，定义上三角差异范数
+\begin{equation}
+  T_{\mathrm{obs}}=
+  \left[\sum_{1\leq j<k\leq9}
+  \left(\rho_{jk}^{(H)}-\rho_{jk}^{(L)}\right)^2\right]^{1/2}.
+  \label{eq:corrdiff}
+\end{equation}
+在保持18个高钾点与49个铅钡点样本量不变的条件下，将类型标签随机置换1000次。观察到$T_{\mathrm{obs}}=2.503$，经验$p=0.005$，说明两类玻璃的相关结构差异显著，不是同一相关网络的普通抽样波动。
+
+\begin{table}[htbp]
+\centering
+\caption{两类玻璃相关系数差异最大的成分对}
+\label{tab:corrpairs}
+\begin{tabular}{lrrr}
+\toprule
+成分对 & 高钾$\rho$ & 铅钡$\rho$ & 差值 \\
+\midrule
+$\mathrm{SiO_2}$--$\mathrm{K_2O}$ & $-0.463$ & $0.343$ & $-0.806$ \\
+$\mathrm{CaO}$--$\mathrm{P_2O_5}$ & $-0.375$ & $0.393$ & $-0.767$ \\
+$\mathrm{K_2O}$--$\mathrm{CaO}$ & $0.457$ & $-0.300$ & $0.757$ \\
+$\mathrm{Fe_2O_3}$--$\mathrm{CuO}$ & $0.220$ & $-0.511$ & $0.731$ \\
+$\mathrm{K_2O}$--$\mathrm{BaO}$ & $-0.695$ & $0.010$ & $-0.704$ \\
+$\mathrm{Fe_2O_3}$--$\mathrm{BaO}$ & $0.189$ & $-0.501$ & $0.690$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+高钾玻璃中$\mathrm{K_2O}$--$\mathrm{BaO}$呈较强负相关，$\mathrm{SiO_2}$--$\mathrm{K_2O}$亦为负相关；铅钡玻璃中$\mathrm{Fe_2O_3}$--$\mathrm{CuO}$、$\mathrm{Fe_2O_3}$--$\mathrm{BaO}$表现为明显负相关。相关描述的是相对成分的单调共变，不等于元素间直接化学反应；其合理用途是作为配方体系与风化路径的统计指纹。
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.96\textwidth]{fig6_correlation.pdf}
+\caption{两类玻璃的CLR-Spearman相关矩阵及成分对差异}
+\label{fig:correlation}
+\end{figure}
+
+\section{模型检验及可靠性分析}
+
+\subsection{数据层级与信息泄漏审查}
+
+本文的首要可靠性控制是分析单位一致性。列联分析仅使用58件文物，避免一个文物因多测点而多次计数；化学差异比较先在文物—状态内聚合；分类交叉验证严格按文物编号分组。若改用普通随机划分，同一文物的风化点与未风化点可能跨集合出现，使模型通过个体特征“识别文物”而非识别玻璃类型。分组验证切断了这一泄漏路径。
+
+\subsection{风化复原的基线比较}
+
+风化复原同时用普通MAE和Aitchison距离评价。49号样品的模型MAE略逊于组均值，但其Aitchison距离明显更低；50号样品两项指标均更优。两件文物平均Aitchison距离由4.79降至2.94，表明模型更好地保持了相对成分结构。由于$n=2$，本文没有据此计算狭窄置信区间，也不将该模型表述为高精度个体预测器。
+
+\subsection{分类模型的交叉核验}
+
+阈值模型和随机森林分别代表低复杂度、高可解释模型与非线性多变量模型。前者在58次留一文物验证中阈值仅在5.973\%--6.981\%之间变化，且始终位于两类$\mathrm{PbO}$空档内；后者在分层分组五折中同样无误判。两个结构差异较大的模型给出一致结果，降低了结论依赖某一算法偶然性的风险。然而，“100\%”只描述附件数据内部的完全分离，不代表对时空范围外样本必然无误。
+
+\subsection{聚类稳定性检验}
+
+固定目标$k$后，对所选成分施加5\%乘性高斯扰动并重复120次，以原聚类与扰动聚类的调整兰德指数（ARI）评估稳定性。高钾和铅钡的ARI中位数均为1.000；ARI不低于0.8的比例分别为91.7\%和100.0\%。将Z-score改为Min--Max尺度后，两类ARI均为1.000。说明主要簇结构对小扰动与常用尺度选择不敏感。
+
+对于铅钡玻璃，$k=4$的轮廓系数确实比$k=3$高0.009，因此本文没有用“轮廓系数最大”支持三分类，而是将三分类明确定位为解释性与稳定性的简约方案。这一表述保留了模型选择中的真实不确定性。
+
+\subsection{未知样品的极端扰动检验}
+
+$\pm20\%$扰动下无样品翻转，说明附件内的判别间隔远大于常见相对测量波动。逐级提高到60\%后，仅A5首先出现少量随机森林翻转，与其$\mathrm{PbO}$离阈值最近相吻合。因而建议实际复测优先关注A5；其余样品具有更大的分类裕度。
+
+\subsection{相关网络的总体显著性}
+
+相关分析未采用“先观察大差值、再挑选成分对”的单点显著性叙事，而是预先定义矩阵整体差异范数，再通过1000次类型标签置换获得$p=0.005$。该检验回答的是“两类关联网络总体是否不同”，\cref{tab:corrpairs}只用于解释差异来源，避免多重挑选造成的过度结论。
+
+\section{模型评价与展望}
+
+\subsection{模型优点}
+
+\begin{enumerate}
+  \item \textbf{尊重数据层级。}文物层面分析、采样点层面分析和文物—状态平衡记录各司其职，减少重复采样导致的权重偏差。
+  \item \textbf{尊重成分数据几何。}闭合、乘性零值替代和CLR变换贯穿复原与相关分析，避免把比例向量简单当作无约束欧氏变量。
+  \item \textbf{解释性与预测性互证。}$\mathrm{PbO}$阈值可供快速筛查，随机森林用于核验多变量边界；二者一致时结论更可信。
+  \item \textbf{验证与训练同层级。}所有分类验证按文物编号分组，避免同一文物不同点跨集合的信息泄漏。
+  \item \textbf{稳健性可量化。}风化复原有基线对照，聚类报告ARI，未知样品进行逐级加压，相关矩阵采用总体置换检验。
+\end{enumerate}
+
+\subsection{模型局限}
+
+\begin{enumerate}
+  \item 风化前复原只有49号、50号两件文物可直接配对验证，个体级误差估计仍不充分。
+  \item 统一CLR位移描述同类型平均风化方向，难以覆盖严重风化中的非线性溶蚀、环境元素迁入和不同埋藏条件。
+  \item 铅钡$k=3$与$k=4$的轮廓系数接近，亚类数依赖统计分离、簇规模和考古解释的共同判断。
+  \item 相关系数受样本规模和未检出值处理影响，只能作为后续光谱、显微或埋藏环境实验的线索，不能替代机理证据。
+  \item 已知样品中$\mathrm{PbO}$完全分离可能具有数据集特异性；面对新地区或新年代样本，应重新校准阈值并设置拒判区间。
+\end{enumerate}
+
+\subsection{推广方向}
+
+若获得更多同件文物的风化—未风化配对点，可将\cref{eq:delta}推广为分层贝叶斯位移模型，使类型、埋藏区域、风化等级拥有各自随机效应，并输出个体预测区间。若增加年代、产地、同位素和微量元素，可采用混合专家模型同时完成类型识别与来源推断。面向博物馆现场，可将$\mathrm{PbO}$阈值作为一级快速筛查，对阈值附近或模型意见不一致的样品启动多变量模型与复测程序。
+
+\section{结论}
+
+本文围绕古代玻璃风化、鉴别与组内差异建立了统一的成分数据建模框架，主要结论如下：
+
+\begin{enumerate}
+  \item 玻璃类型是表面风化的主要关联因素。铅钡玻璃风化优势比为4.67；纹饰只呈趋势，颜色未显示显著关联。
+  \item 高钾玻璃风化表现为$\mathrm{SiO_2}$相对富集、$\mathrm{K_2O}$等组分降低；铅钡玻璃表现为$\mathrm{SiO_2}$下降、$\mathrm{PbO}$和$\mathrm{P_2O_5}$相对富集。CLR位移复原保持了成分闭合性，并在有限配对样本上优于组均值基线。
+  \item $\mathrm{PbO}=6.078\%$在附件数据内形成清晰、稳定且可解释的类型边界；留一文物阈值验证和分组随机森林验证均无误判。
+  \item 高钾玻璃分为2个亚类；铅钡玻璃采用3个可解释亚类作为简约方案。两类聚类在扰动和尺度替换下均保持较高稳定性。
+  \item A1、A6、A7判为高钾玻璃，其余5件判为铅钡玻璃；$\pm20\%$乘性扰动下所有标签保持不变，A5是最接近边界、最值得复测的样品。
+  \item 两类玻璃的CLR-Spearman相关矩阵存在显著总体差异（$p=0.005$），为区分配方体系和风化路径提供了额外统计指纹。
+\end{enumerate}
+
+\begin{thebibliography}{99}
+\bibitem{gan2006}
+干福熹. 中国古代玻璃的起源与发展[J]. 自然杂志, 2006, 28(4): 187--193.
+
+\bibitem{li2010}
+李青会, 等. 中国古代钾玻璃的科学分析[J]. 文物保护与考古科学, 2010.
+
+\bibitem{cui2015}
+崔剑锋, 等. 铅钡玻璃的风化机理研究[J]. 光谱学与光谱分析, 2015.
+
+\bibitem{cumcm2022}
+全国大学生数学建模竞赛组委会. 2022年高教社杯全国大学生数学建模竞赛题目[Z]. 2022.
+
+\bibitem{kaufman1990}
+Kaufman L, Rousseeuw P J. \emph{Finding Groups in Data: An Introduction to Cluster Analysis}[M]. Wiley, 1990.
+\end{thebibliography}
+
+\clearpage
+\appendix
+\ctexset{section={number=附录\Alph{section}}}
+
+\section{风化点风化前成分预测结果（节选）}
+
+\begin{table}[H]
+\centering
+\caption{CLR位移模型预测的风化前成分（单位：\%）}
+\label{tab:appendix_prediction}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{cllrrrrrrr}
+\toprule
+采样点 & 类型 & 状态 & $\mathrm{SiO_2}$ & $\mathrm{K_2O}$ & $\mathrm{CaO}$ & $\mathrm{Al_2O_3}$ & $\mathrm{PbO}$ & $\mathrm{BaO}$ & $\mathrm{P_2O_5}$ \\
+\midrule
+02 & 铅钡 & 风化 & 67.45 & 1.27 & 0.73 & 7.75 & 19.63 & 0.04 & 0.39 \\
+07 & 高钾 & 风化 & 76.48 & 1.11 & 6.16 & 7.92 & 0.18 & 0.14 & 2.14 \\
+08 & 铅钡 & 风化 & 42.93 & 0.07 & 0.53 & 2.08 & 13.61 & 30.37 & 0.45 \\
+08严重风化点 & 铅钡 & 严重风化 & 13.52 & 0.09 & 1.57 & 2.37 & 21.19 & 40.98 & 1.29 \\
+09 & 高钾 & 风化 & 73.76 & 12.32 & 3.36 & 4.97 & 0.17 & 0.13 & 1.15 \\
+10 & 高钾 & 风化 & 73.66 & 18.83 & 1.11 & 2.99 & 0.17 & 0.13 & 0.16 \\
+11 & 铅钡 & 风化 & 65.33 & 0.27 & 1.14 & 3.80 & 10.99 & 12.96 & 1.07 \\
+12 & 高钾 & 风化 & 67.40 & 19.42 & 3.59 & 5.06 & 0.16 & 0.12 & 0.45 \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+完整预测结果保存在工程的\texttt{data}目录中。表中只列示前8条及主要成分，以控制正文篇幅；全部14种成分均由同一CLR位移模型输出，行和为100\%。
+
+\section{核心算法与复现参数}
+
+\begin{algorithm}[H]
+\caption{分层稳健的古代玻璃分析流程}
+\label{alg:pipeline}
+\begin{algorithmic}[1]
+\Require 文物信息表$M$、已知成分表$X$、未知成分表$U$
+\Ensure 风化检验、复原组成、类型与亚类、未知样品标签、相关结构
+\State 删除成分和不在$[85\%,105\%]$的采样点；空白置0并闭合
+\State 在文物层面对类型、纹饰、颜色实施置换列联检验
+\State 在文物—状态内平衡多测点，比较两类玻璃风化前后成分
+\State 对$X$作乘性零值替代与CLR变换，估计各类型风化位移
+\State 用留一文物配对点检验复原误差
+\State 由$\mathrm{PbO}$间隔建立阈值；用分组交叉验证随机森林核验
+\State 选择解释性成分并标准化；以轮廓系数选择候选$k$
+\State 通过扰动ARI、尺度替换和簇中心解释确定亚类方案
+\State 对$U$分类并实施$\pm5\%$至$\pm60\%$闭合扰动试验
+\State 计算两类CLR-Spearman矩阵并作标签置换检验
+\end{algorithmic}
+\end{algorithm}
+
+关键复现参数如下：随机种子20220818；列联表置换5000次；相关矩阵置换1000次；随机森林500棵树、类别权重\texttt{balanced}；K-means采用k-means++初始化，正式聚类\texttt{n\_init=200}；聚类扰动稳定性重复120次；未知样品每个非零扰动幅度模拟500次。完整Python源代码位于\texttt{code/analysis\_and\_figures.py}。
+
+\section{工程文件说明}
+
+\begin{table}[H]
+\centering
+\caption{LaTeX工程中的主要文件}
+\begin{tabularx}{0.94\textwidth}{P{0.37\textwidth}X}
+\toprule
+文件或目录 & 作用 \\
+\midrule
+\texttt{main.tex} & 完整论文LaTeX源文件，使用XeLaTeX编译 \\
+\texttt{figures/fig1--fig6.pdf} & 六幅论文风格矢量图 \\
+\path{code/analysis_and_figures.py} & 数据处理、统计建模、验证与绘图代码 \\
+\texttt{data/*.csv} & 关联检验、复原预测、聚类、分类、敏感性及相关比较结果 \\
+\texttt{README.md} & 编译方法、环境要求和目录说明 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection*{关键组成数据函数节选}
+
+下面给出闭合、乘性零值替代、CLR及逆CLR变换的实际实现。该代码与正文式\eqref{eq:closure}--式\eqref{eq:invclr}一一对应，其余统计检验、分类、聚类和绘图代码见工程中的完整源文件。
+
+\lstinputlisting[language=Python,firstline=120,lastline=154,
+caption={闭合数据变换的Python实现}]{code/analysis_and_figures.py}
+
+\end{document}
