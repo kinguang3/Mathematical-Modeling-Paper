@@ -10,11 +10,13 @@
 
 ## 项目列表
 
-| 项目 | 竞赛 | 赛题 | 核心技术 |
-|------|------|------|----------|
-| [Ancient-Glass-Composition-Classification-MCM2022](Ancient-Glass-Composition-Classification-MCM2022/) | 2022 高教社杯 C 题 | 古代玻璃制品成分分析与鉴别 | 成分数据（CLR 变换）、统计检验、随机森林、K-means |
-| [Crop-Planting-Optimization-2024](Crop-Planting-Optimization-2024/) | 2024 高教社杯 C 题 | 农作物的种植策略 | 滚动混合整数线性规划（MILP）、蒙特卡洛 + CVaR |
-| [JUFE-2026-MCM-C-UAV-Delivery](JUFE-2026-MCM-C-UAV-Delivery/) | 2026 江西财经大学校赛 C 题 | 城市低空即时配送网络优化 | 整数规划（ILP）、贪心重调度（GCFR）、韧性指标（NFRI） |
+| 项目                                                                                                                 | 竞赛                       | 赛题                        | 核心技术                                                    |
+| -------------------------------------------------------------------------------------------------------------------- | -------------------------- | --------------------------- | ----------------------------------------------------------- |
+| [Ancient-Glass-Composition-Classification-MCM2022](Ancient-Glass-Composition-Classification-MCM2022/)                | 2022 高教社杯 C 题         | 古代玻璃制品成分分析与鉴别  | 成分数据（CLR 变换）、统计检验、随机森林、K-means           |
+| [Crop-Planting-Optimization-2024](Crop-Planting-Optimization-2024/)                                                  | 2024 高教社杯 C 题         | 农作物的种植策略            | 滚动混合整数线性规划（MILP）、蒙特卡洛 + CVaR               |
+| [JUFE-2026-MCM-C-UAV-Delivery](JUFE-2026-MCM-C-UAV-Delivery/)                                                        | 2026 江西财经大学校赛 C 题 | 城市低空即时配送网络优化    | 整数规划（ILP）、贪心重调度（GCFR）、韧性指标（NFRI）       |
+| [Study-on-LED-Light-Sources-with-Tunable-Circadian-Rhythm](Study-on-LED-Light-Sources-with-Tunable-Circadian-Rhythm) | 2025年华数杯 C题           | 可调控生物节律的LED光源研究 | 光谱功率分布；多通道LED；TM-30；mel-DER；动态优化；重复测量 |
+
 
 每个项目文件夹内均含独立 README 介绍、完整论文与可复现代码。
 
