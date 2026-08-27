@@ -1,0 +1,1 @@
+使用 XeLaTeX 编译：xelatex -interaction=nonstopmode main.tex。工程已经包含 figures/、code/solve_C_modern.py 与 code/analysis_pipeline.py。

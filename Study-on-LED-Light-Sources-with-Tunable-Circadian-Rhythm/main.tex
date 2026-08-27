@@ -1,0 +1,850 @@
+\documentclass[UTF8,a4paper,12pt]{ctexart}
+
+\usepackage[a4paper,left=3.18cm,right=2.96cm,top=2.65cm,bottom=2.35cm]{geometry}
+
+\usepackage{amsmath,amssymb,booktabs,longtable,graphicx,float,placeins,subcaption,xcolor,listings,array,multirow,enumitem,hyperref,adjustbox}
+
+\usepackage{caption}
+
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=black,urlcolor=blue}
+
+\setCJKmainfont{SimSun}[AutoFakeBold=2]
+
+\setCJKsansfont{SimHei}[AutoFakeBold=2]
+
+\setmainfont{Times New Roman}
+
+\setlength{\parindent}{2em}
+
+\setlength{\parskip}{0pt}
+
+\linespread{1.35}
+
+\captionsetup{font=small,labelfont=bf,labelsep=space}
+
+\lstset{language=Python,basicstyle=\ttfamily\scriptsize,breaklines=true,breakatwhitespace=false,columns=fullflexible,keepspaces=true,frame=single,rulecolor=\color{gray!45},backgroundcolor=\color{gray!4},keywordstyle=\color{blue!60!black},commentstyle=\color{green!40!black},showstringspaces=false,literate={λ}{{$\lambda$}}1 {χ}{{$\chi$}}1 {′}{{'}}1}
+
+\setlength{\emergencystretch}{3em}
+
+\renewcommand{\arraystretch}{1.18}
+
+\setcounter{secnumdepth}{0}
+
+\begin{document}
+
+\begin{center}\LARGE\bfseries 基于多目标光谱优化与配对推断的可调控生物节律LED光源研究\end{center}
+
+\begin{abstract}
+
+面向兼顾视觉质量与非视觉生物效应的可调光LED设计，本文建立从光谱功率分布到颜色表观、节律刺激、动态配光和睡眠效应检验的一体化模型。首先在380～780 nm、1 nm间隔上对光谱离散积分，结合CIE 1931、CIE 1960 UCS、ANSI/IES TM-30-18和CIE S 026，计算相关色温CCT、色偏差Duv、保真度指数Rf、色域指数Rg及黑视素日光效能比mel-DER；随后把五通道混光写成单纯形约束下的线性组合，并针对日间与夜间场景构造不同目标函数。
+
+问题一中，实测LED的CCT为3903.03 K、Duv为-0.001017、Rf为91.79、Rg为106.08、mel-DER为0.6407，表明其颜色保真度较高、平均色域略扩张，节律刺激低于等光视效应的D65。问题二中，日间模式在满足CCT、Duv、Rf和Rg约束后取得Rf=92.86、mel-DER=0.8362；夜间模式在维持Rf=88.70的同时将mel-DER降至0.3668。两种最优解均落在允许色温区间的下边界，揭示了目标函数对约束边界的主动利用。
+
+问题三以题目指定的08:30～19:30为控制时段，建立同时考虑归一化光谱形状、CCT、Duv、mel-DER和相邻时刻权重变化的动态损失。12个时刻的平均归一化SPD均方根误差为0.001498，平均CCT绝对误差为111.73 K，平均mel-DER绝对误差为0.0883；最大相邻权重步长为0.3033，出现在19:30前的暮光转折。结果说明五通道可稳定跟随日间变化，但在低色温暮光阶段存在由光谱基底不足导致的重构上限。
+
+问题四对11名被试、3种环境的重复测量数据采用Friedman总体检验，并对显著终点实施Wilcoxon配对检验、Holm校正、秩二列效应量和配对bootstrap置信区间。仅N3比例总体差异显著（$\chi^2$=7.0909，p=0.0289，Kendall's W=0.322）；A相对C的均值差为-5.649个百分点，Holm校正p=0.0205，95\%置信区间为[-8.846，-2.353]。在附件缺少条件映射、且数据为随机生成的边界下，现有证据不支持优化光照全面改善睡眠。本文模型提供了可复算、可约束、可审计的LED节律照明设计流程，并明确给出工程适用范围与统计解释边界。
+
+\end{abstract}
+
+关键词：光谱功率分布；多通道LED；TM-30；mel-DER；动态优化；重复测量
+
+\section{一、问题重述}
+
+\subsection{1.1 研究背景}
+
+光不仅承担照明与颜色呈现功能，还通过视网膜内在光敏神经节细胞影响褪黑素分泌、警觉水平和昼夜节律。传统照明评价常用相关色温或显色指数概括光源，但相同CCT的光谱可能具有显著不同的短波能量和黑视素刺激；反之，单纯压低蓝光又可能牺牲颜色辨识与视觉舒适。因此，可调控生物节律的LED设计本质上是受视觉质量、颜色表观、节律响应和硬件可实现性共同约束的光谱优化问题。[2-3]
+
+题目提供单灯光谱、五通道LED基光谱、逐时太阳光谱及三夜睡眠记录。四类数据分别对应“测得准、配得出、跟得上、证据稳”四个层次：先把SPD转换为标准指标，再求日间与夜间配方，随后生成全天控制序列，最后判断优化光照是否带来睡眠收益。若各问使用彼此割裂的经验指标，结论容易相互冲突；因此本文始终以SPD为共同数据接口。
+
+\subsection{1.2 问题提出}
+
+问题1：由给定LED光谱计算CCT、Duv、Rf、Rg和mel-DER，并解释视觉与节律含义。
+
+问题2：在五通道非负归一化混光条件下，分别求解日间高质量照明与夜间低节律刺激配方。
+
+问题3：在08:30～19:30逐时模拟太阳光谱，使光谱形状、颜色指标与节律指标尽量同步变化，同时避免控制量突跳。
+
+问题4：由11名被试的三夜记录计算睡眠终点，采用适合重复测量的统计方法比较A、B、C三种环境。
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccc}
+\toprule
+子问题 & 主要输入 & 决策变量/方法 & 主要输出 \\
+\midrule
+问题一 & 单组SPD & 标准积分与颜色外观计算 & CCT、Duv、Rf、Rg、mel-DER \\
+问题二 & 五通道SPD & 权重向量w & 日间/夜间最优配方 \\
+问题三 & 逐时太阳SPD & 权重序列w(t) & 逐时配方与跟踪误差 \\
+问题四 & 33条睡眠序列 & 配对非参数推断 & 效应、显著性与边界 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\section{二、问题分析}
+
+\subsection{2.1 统一的光谱计算接口}
+
+四问的共同困难在于评价量处于不同层级：SPD是逐波长物理量，CCT与Duv描述综合色度，Rf与Rg依赖99个颜色评估样本和颜色外观空间，mel-DER则比较黑视素与明视觉加权效能。本文先在统一波长网格上建立指标引擎，使任何候选权重都能返回同一组指标，避免优化器在不同近似口径间切换。
+
+\subsection{2.2 约束优化而非单指标排序}
+
+日间模式若只最大化Rf，可能得到色温或色域不适宜的配方；夜间模式若只最小化短波能量，又可能失去基本显色能力。因此两种场景均采用“单一主目标+标准硬约束”的形式：日间以Rf为主目标，夜间以mel-DER为主目标，CCT、Duv、Rf、Rg和权重单纯形共同限定可行域。
+
+\subsection{2.3 动态拟合的多尺度误差}
+
+太阳光谱随时间同时改变形状、综合色度与节律效应。仅以原始幅值均方误差拟合会受照度尺度主导，且不能保证色温一致。本文先归一化SPD以比较形状，再把CCT、Duv和mel-DER误差无量纲化，并加入相邻权重的二次平滑惩罚，使误差项具有清晰的物理含义和工程含义。
+
+\subsection{2.4 小样本重复测量的统计策略}
+
+三种环境由同一批11名被试重复经历，观测不独立且样本量较小，正态性与方差齐性难以可靠保证。故总体比较采用Friedman检验；只有总体检验显著的终点才进入成对Wilcoxon检验，并以Holm法控制家族错误率。显著性之外同时报告Kendall's W、秩二列效应量与配对bootstrap置信区间，以区分“有差异”与“差异有多大”。
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccc}
+\toprule
+问题一 标准指标标定 & → & 问题二 双场景光谱优化 & → & 问题三 全天动态控制 & → & 问题四 睡眠效应检验 \\
+\midrule
+SPD CCT / Duv Rf / Rg / mel-DER & → & 日间：max Rf 夜间：min mel-DER 单纯形约束 & → & 光谱形状 + 色温 节律效应 + 平滑项 & → & Friedman总体检验 Wilcoxon-Holm 效应量与置信区间 \\
+SPD CCT / Duv Rf / Rg / mel-DER & → & 日间：max Rf 夜间：min mel-DER 单纯形约束 & → & 光谱形状 + 色温 节律效应 + 平滑项 & → & Friedman总体检验 Wilcoxon-Holm 效应量与置信区间 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\section{三、模型假设、数据边界与符号}
+
+\subsection{3.1 模型假设}
+
+假设1：SPD在380～780 nm按1 nm间隔离散采样，区间积分采用梯形积分；缺失波长不作外推。
+
+假设2：五个LED通道在工作区间内满足线性光谱叠加，权重非负且总和为1；暂不考虑结温、老化和驱动非线性。
+
+假设3：CCT与Duv基于CIE 1931 2°标准观察者和CIE 1960 UCS中的普朗克轨迹；Rf、Rg按ANSI/IES TM-30-18流程计算。[1-2,8,10]
+
+假设4：mel-DER按CIE S 026定义，以D65为参考光源；公共辐射尺度在比值中抵消。[3,9,11]
+
+假设5：每30 s睡眠分期中，2、3、5分别视为N2、N3和REM，4为清醒；三次夜间记录属于同一被试的配对重复测量。
+
+假设6：附件未给出Night 1～3与A/B/C的映射，基准分析暂设Night 1=A（优化光照）、Night 2=B（普通LED）、Night 3=C（黑暗）。
+
+\subsection{3.2 数据口径与可解释边界}
+
+工作簿把SPD列标为mW·m⁻²·nm⁻¹，而题面以W·nm⁻¹描述。本文不据此推断绝对辐照度，而在颜色比值、光谱归一化和权重优化中使用相对SPD；因此统一尺度变换不影响CCT、Duv、Rf、Rg和mel-DER，但绝对光生物安全与照度结论不在本文范围内。
+
+问题三工作簿含05:30～19:30共15个时刻，而题目要求08:30～19:30。为服从任务定义，正文与统计汇总只使用08:30起的12个时刻；05:30～07:30保留在原始数据中但不进入目标函数。
+
+问题四的条件映射是影响解释方向的高敏感假设。本文将所有统计量先按Night编号复算，再在明确标注的映射下解释为A/B/C。若实验日志给出不同映射，只需重排条件标签即可复算，模型与检验方法无需改变。
+
+\subsection{3.3 符号说明}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcc}
+\toprule
+符号 & 含义 & 单位 \\
+\midrule
+$\lambda$ & 波长 & nm \\
+S($\lambda$) & 光谱功率分布或相对光谱 & 相对值 \\
+X,Y,Z & CIE三刺激值 & — \\
+x,y & CIE 1931色品坐标 & — \\
+u,v & CIE 1960 UCS坐标 & — \\
+CCT & 相关色温 & K \\
+Duv & 测试点至普朗克轨迹的有符号距离 & — \\
+Rf,Rg & TM-30保真度指数与色域指数 & — \\
+mel-DER & 黑视素日光效能比 & — \\
+w\_i(t) & 时刻t第i个LED通道权重 & — \\
+TST,SE,SOL & 总睡眠时间、睡眠效率、入睡潜伏期 & min,\% ,min \\
+N3\%,REM\% & N3与REM占总睡眠时间比例 & \% \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\section{四、问题一：标准光谱指标计算}
+
+\subsection{4.1 数据预处理与三刺激值}
+
+原始SPD含401个波长点，范围380～780 nm。首先检查波长单调性、负值、缺失值与采样间隔，再与标准色匹配函数和作用光谱逐波长对齐。为避免插值引入伪峰，只有标准函数被重采样到1 nm网格，实测SPD保持原值。
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+X=∫S($\lambda$)x̄($\lambda$)d$\lambda$，Y=∫S($\lambda$)ȳ($\lambda$)d$\lambda$，Z=∫S($\lambda$)z̄($\lambda$)d$\lambda$ & (1) \\
+\midrule
+x=X/(X+Y+Z)，y=Y/(X+Y+Z) & (2) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+三刺激值的共同尺度只影响亮度，不改变综合色品坐标。由此，附件SPD单位的整体倍率不确定性不会传递到后续综合色度、色域形状和效能比。
+
+\subsection{4.2 CCT与Duv}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+u=4X/(X+15Y+3Z)，v=6Y/(X+15Y+3Z) & (3) \\
+\midrule
+T*=arg min\_T\{[(u-u\_T)²+(v-v\_T)²]\textasciicircum{}(1/2)\} & (4) \\
+Duv=sgn[(u,v),(u\_T*,v\_T*)]·||(u,v)-(u\_T*,v\_T*)||₂ & (5) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+在CIE 1960 UCS中离散生成普朗克辐射轨迹，先粗搜索最近温度区间，再局部插值精化。CCT取最近轨迹点对应温度，Duv取测试点相对轨迹法向的有符号距离。与直接套用经验多项式相比，该方法在本题色温范围内更易解释，也能对优化候选统一调用。[1,5,8]
+
+\subsection{4.3 TM-30颜色保真度与色域}
+
+TM-30使用99个颜色评估样本（CES）评价测试光源与同CCT参考光源下的颜色位移。每个样本的反射光谱分别与测试、参考SPD相乘，经颜色适应与CAM02-UCS转换后得到J′a′b′坐标。[2,10,12]
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+P\_i\textasciicircum{}t($\lambda$)=S\_t($\lambda$)ρ\_i($\lambda$)，P\_i\textasciicircum{}r($\lambda$)=S\_r($\lambda$)ρ\_i($\lambda$) & (6) \\
+\midrule
+ΔE′\_i=[(ΔJ′\_i)²+(Δa′\_i)²+(Δb′\_i)²]\textasciicircum{}(1/2) & (7) \\
+Rf=100-6.73·mean(ΔE′\_i)，Rg=100·A\_test/A\_ref & (8) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Rf越接近100，平均颜色偏差越小；Rg约为100表示平均色域面积与参考光源相当，大于100表示综合色域扩张。二者必须联合解释：高Rg并不等同于高保真，反之高Rf也不保证所有色相区间完全无偏。
+
+\subsection{4.4 黑视素日光效能比}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+K\_mel,v=∫S($\lambda$)s\_mel($\lambda$)d$\lambda$ / ∫S($\lambda$)V($\lambda$)d$\lambda$ & (9) \\
+\midrule
+mel-DER=K\_mel,v / K\_mel,v(D65) & (10) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+mel-DER比较单位明视觉效应下测试光源与D65的黑视素刺激。该量对约480 nm附近的能量更敏感，因而能区分综合色温相近但短波构成不同的光源；它反映光谱潜在节律刺激，而不是直接的临床睡眠效应。[3,9,11]
+
+\subsection{4.5 计算结果与光谱解释}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcc}
+\toprule
+指标 & 结果 & 解释 \\
+\midrule
+CCT & 3903.03 K & 中低色温白光 \\
+Duv & -0.001017 & 略低于普朗克轨迹 \\
+Rf & 91.79 & 整体颜色保真度较高 \\
+Rg & 106.08 & 平均色域轻度扩张 \\
+mel-DER & 0.6407 & 单位明视觉效应下低于D65 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{4.6 交叉验证与误差来源}
+
+本题结果与建模报告中的CCT≈3900 K、Rf≈91.79、Rg≈106.08和mel-DER≈0.6407一致。差异主要来自普朗克轨迹插值、标准数据版本和数值积分实现。计算中CCT与Duv共享同一色品点，Rf与Rg共享同一TM-30样本流程，mel-DER分子分母共享同一波长网格，从结构上避免了口径不一致。
+
+\section{五、问题二：日间与夜间多通道光谱优化}
+
+\subsection{5.1 五通道线性混光模型}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+S\_mix($\lambda$;w)=Σ\_(i=1)\textasciicircum{}5 w\_i S\_i($\lambda$) & (11) \\
+\midrule
+w\_i≥0，Σ\_(i=1)\textasciicircum{}5 w\_i=1 & (12) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+Blue、Green和Red提供窄带调节能力，Warm White与Cold White提供宽谱基底。权重归一化使解可直接映射为相对驱动占空比；若实际灯具各通道最大辐射通量不同，只需在S\_i($\lambda$)中预先包含通道标定系数。
+
+\subsection{5.2 日间模式}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+max\_w Rf(w) & (13) \\
+\midrule
+5500≤CCT≤6500，|Duv|≤0.007，Rf≥88，95≤Rg≤105 & (14) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+日间模式要求高颜色保真和中高色温，同时限制综合色域不过度收缩或扩张。将Rf设为主目标而把其余指标作为硬约束，可使每个可行候选都符合基本照明规范，避免由加权和尺度选择造成“用一个指标补偿另一个不合格指标”。
+
+\subsection{5.3 夜间模式}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+min\_w mel-DER(w) & (15) \\
+\midrule
+2500≤CCT≤3500，|Duv|≤0.007，Rf≥80 & (16) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+夜间目标是降低单位明视觉效应下的黑视素刺激，但仍需维持颜色辨识与综合色度可接受。由于蓝光和Cold White对短波贡献较强，优化器倾向压低其权重；然而最终取舍由完整SPD积分决定，不能简单用“蓝通道越少越好”替代。
+
+\subsection{5.4 数值求解策略}
+
+权重可行域为五维单纯形，TM-30计算又包含参考光源选择和非线性颜色外观转换，目标函数非凸且单次评价成本较高。本文使用多个物理可行初值启动SLSQP，在每次迭代中缓存重复权重的标准指标，筛除违反边界的候选，最终从可行解中选择主目标最优者。约束残差以2×10⁻⁵量级作为数值容差。
+
+\begin{quote}\small
+算法1  日间/夜间静态光谱优化 输入：五通道SPD S\_i($\lambda$)，场景约束集合 C，多个初始权重 w\textasciicircum{}(0) 1. 对每个初始权重，执行SLSQP约束优化； 2. 由统一指标引擎计算CCT、Duv、Rf、Rg和mel-DER； 3. 缓存已评价权重，拒绝单纯形或场景约束不满足的解； 4. 日间按Rf降序、夜间按mel-DER升序选择最优可行解； 输出：最优权重、合成SPD与全部标准指标。
+\end{quote}
+
+\subsection{5.5 最优配方与指标}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccccc}
+\toprule
+场景 & Blue & Green & Red & Warm White & Cold White \\
+\midrule
+日间 & 0.1504 & 0.1706 & 0.2409 & 0.0096 & 0.4284 \\
+夜间 & 0.0000 & 0.1131 & 0.0000 & 0.8869 & 0.0000 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccc}
+\toprule
+场景 & CCT/K & Duv & Rf & Rg & mel-DER & 结论 \\
+\midrule
+日间 & 5500.00 & 0.006137 & 92.86 & 102.65 & 0.8362 & 全部约束满足 \\
+夜间 & 2500.00 & 0.000865 & 88.70 & 98.39 & 0.3668 & 全部约束满足 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+日间解由Cold White、Red、Green和Blue共同构成，少量Warm White用于微调综合色度；其Rf提高到92.86，Rg保持在约束区间内。夜间解几乎完全由Warm White与Green构成，使mel-DER比问题一实测光源降低约42.8\%，同时Rf仍为88.70。
+
+\subsection{5.6 边界解的工程解释}
+
+两种最优解均落在允许CCT的下边界：日间为5500 K，夜间为2500 K。这并非求解失败，而是主目标与约束共同作用的结果。日间较低色温在当前基光谱中有利于保真度，夜间较低色温有利于抑制黑视素刺激。工程实施时应把边界附近的制造偏差纳入安全裕量，例如把控制目标略移向可行域内部，再通过实灯光谱闭环校正。
+
+\section{六、问题三：全天太阳光谱动态模拟}
+
+\subsection{6.1 目标时段与光谱归一化}
+
+按题面要求选取08:30～19:30共12个整点。太阳SPD的绝对幅值同时受太阳高度、天气和测量尺度影响，而五通道权重只描述配光比例，因此先按波长积分归一化，比较光谱形状；绝对照度可由独立总驱动系数在模型外控制。
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+S̄($\lambda$,t)=S($\lambda$,t)/∫S($\lambda$,t)d$\lambda$ & (17) \\
+\midrule
+e\_S(t)=sqrt\{(1/N)Σ\_$\lambda$[S̄\_LED($\lambda$,t)-S̄\_sun($\lambda$,t)]²\} & (18) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{6.2 动态多目标损失}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+d\_C=(CCT\_LED-CCT\_sun)/1000，d\_D=(Duv\_LED-Duv\_sun)/0.010，d\_M=(mel\_LED-mel\_sun)/0.20 & (19) \\
+\midrule
+J=Σ\_t[e\_S²+0.55d\_C²+0.18d\_D²+0.45d\_M²]+0.12Σ\_t||w(t)-w(t-1)||₂² & (20) \\
+w\_i(t)≥0，Σ\_i w\_i(t)=1，t=08:30,…,19:30 & (21) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+各尺度因子把色温、Duv与mel-DER误差转换为可比较的无量纲量。0.12的平滑系数不把权重固定为单调曲线，而是只在相邻解差异过大时施加代价，从而保留暮光阶段真实的快速变化。
+
+\subsection{6.3 序列优化算法}
+
+采用顺序SLSQP求解每个时刻的五维子问题。求解第t个时刻时，把相邻已更新权重作为平滑参照；初始序列取以白光通道为主的可行权重。所有子问题收敛后重新计算逐时光谱、综合色度与节律指标，并用相邻权重L2距离检查驱动平滑性。
+
+\begin{quote}\small
+算法2  全天权重序列优化 输入：12组目标太阳SPD、五通道SPD、损失权重与单纯形约束 1. 对每个目标太阳SPD计算归一化光谱、CCT、Duv和mel-DER； 2. 初始化12×5权重矩阵，每行归一化； 3. 依次固定邻域权重并以SLSQP最小化局部多目标损失； 4. 回算合成SPD和逐时指标，计算NRMSE与相邻权重步长； 5. 若约束或收敛检查失败，则更换初值并重新求解； 输出：w(t)、合成光谱及诊断表。
+\end{quote}
+
+\subsection{6.4 全天控制结果}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccc}
+\toprule
+诊断量 & 平均值 & 最大值 & 含义 \\
+\midrule
+归一化SPD RMSE & 0.001498 & 0.002082 & 光谱形状误差 \\
+|CCT误差|/K & 111.73 & 137.31 & 综合色温偏差 \\
+|mel-DER误差| & 0.08829 & 0.09582 & 节律效应偏差 \\
+相邻权重L2步长 & — & 0.30326 & 驱动变化幅度 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+注：NRMSE基于积分归一化后的SPD；最大权重步长出现在19:30前。
+
+\subsection{6.5 代表时刻的光谱残差结构}
+
+08:30和12:30的残差主要来自太阳光谱平滑宽峰与LED离散峰的结构差异，归一化RMSE分别为0.001419和0.001437。19:30时目标光谱向长波侧集中，Warm White虽提高到0.4058，仍无法完全消除短波窄峰与长波形状差异，NRMSE升至0.002082。该误差不是继续迭代即可消除的纯数值误差，而是五个基光谱张成空间对目标光谱的表示能力上限。
+
+\subsection{6.6 控制可实现性与改进方向}
+
+逐时权重均非负且和为1，可直接作为相对控制指令。除暮光转折外，相邻权重步长较小，说明平滑项有效抑制了不必要的频繁调节。若用于实灯，应增加三类约束：通道最小稳定电流、单步最大变化率和总光通量；若允许升级硬件，可增加琥珀或深红通道，扩大低色温太阳光谱的可表示空间。
+
+\section{七、问题四：睡眠效应的配对统计推断}
+
+\subsection{7.1 睡眠终点计算}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+TST=0.5Σ\_k I(Z\_k$\in$\{2,3,5\})，SE=100·TST/TIB & (22) \\
+\midrule
+SOL=0.5·min\{k:Z\_k$\in$\{2,3,5\}\} & (23) \\
+N3\%=100·T\_N3/TST，REM\%=100·T\_REM/TST & (24) \\
+Awakenings=Σ\_(k>k\_sleep) I(Z\_(k-1)≠4,Z\_k=4) & (25) \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+所有终点均由33条原始分期序列逐条计算，不从组均值反推。TST以非清醒阶段累计，SE以卧床总时长为分母，SOL从记录起点到首次睡眠，夜间觉醒次数只统计入睡后从睡眠转入清醒的事件。
+
+\subsection{7.2 统计模型}
+
+对每个终点构成11×3配对矩阵。Friedman统计量检验三种条件的秩和是否一致，并以Kendall's W衡量总体效应强度：
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+W=$\chi^2$/[n(k-1)]，其中n=11，k=3 & (26) \\
+\midrule
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+当总体p<0.05时，进行A-B、A-C、B-C三组双侧Wilcoxon符号秩检验，并以Holm法调整p值。配对均值差的不确定性通过对11名被试的差值进行30000次有放回重采样获得。
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lc}
+\toprule
+CI\_95\%=[Q\_0.025(Δ̄*),Q\_0.975(Δ̄*)] & (27) \\
+\midrule
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{7.3 描述性统计}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccc}
+\toprule
+条件 & TST/min & SE/\% & SOL/min & N3/\% & REM/\% & 觉醒次数 \\
+\midrule
+A & 366.86±49.70 & 85.72±8.07 & 20.14±12.08 & 19.01±4.40 & 25.28±7.07 & 14.73±3.47 \\
+B & 379.14±58.96 & 87.48±9.29 & 21.73±24.56 & 19.39±7.12 & 26.82±7.46 & 14.18±4.73 \\
+C & 359.68±53.30 & 88.36±8.07 & 10.41±16.05 & 24.66±4.95 & 21.20±7.35 & 13.82±4.81 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+描述性结果没有显示A在所有终点上占优：B的平均TST最高，C的平均SE和N3比例最高、SOL最低，而A各指标多处于中间或较低水平。由于个体轨迹存在明显交叉，组均值不能替代配对检验。
+
+\subsection{7.4 总体检验与事后效应}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccc}
+\toprule
+终点 & $\chi^2$ & p值 & Kendall's W & 判定 \\
+\midrule
+TST & 3.8182 & 0.1482 & 0.174 & 不显著 \\
+SE & 3.4545 & 0.1778 & 0.157 & 不显著 \\
+SOL & 2.3333 & 0.3114 & 0.106 & 不显著 \\
+N3\% & 7.0909 & 0.0289 & 0.322 & 显著 \\
+REM\% & 3.4545 & 0.1778 & 0.157 & 不显著 \\
+觉醒次数 & 3.5000 & 0.1738 & 0.159 & 不显著 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccccc}
+\toprule
+比较 & W & Holm p & 均值差/百分点 & bootstrap 95\% CI & 秩二列效应量 \\
+\midrule
+A-B & 29.0 & 0.7646 & -0.379 & [-5.458, 4.822] & -0.121 \\
+A-C & 4.0 & 0.0205 & -5.649 & [-8.846, -2.353] & -0.879 \\
+B-C & 14.0 & 0.2031 & -5.270 & [-9.950, -0.655] & -0.576 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{7.5 统计结论与解释边界}
+
+在当前映射假设下，没有证据支持优化光照在TST、SE、SOL、REM比例或觉醒次数上优于普通LED或黑暗；N3比例的唯一校正后显著差异反而有利于黑暗条件C。因此，最稳健结论是“光谱优化方案具有明确的光度学与节律指标优势，但该优势未在本小样本随机睡眠数据中转化为全面睡眠改善”。
+
+这一区分对于模型可信度至关重要。mel-DER描述光谱对黑视素系统的相对刺激，不是睡眠疗效指标；睡眠还受照度、暴露时长、相位、个体作息和随机波动影响。附件明确说明数据为随机生成，故显著性结果只能用于演示统计流程，不能外推为临床或人群结论。
+
+\section{八、稳健性、敏感性与误差分析}
+
+\subsection{8.1 光谱尺度与积分口径}
+
+综合色品坐标、TM-30色差、归一化光谱形状和mel-DER均对SPD的统一正比例缩放不敏感。因此，附件单位的mW与题面W差异不改变本文核心结果。需要注意的是，一旦研究扩展到照度、绝对melanopic EDI或光生物安全，统一倍率不再抵消，必须重新标定绝对辐照度。
+
+\subsection{8.2 静态优化的可行性稳健性}
+
+日间与夜间解均通过非负、和为1、CCT、Duv与显色约束的联合复核。多初值策略降低了单次局部搜索停在不可行点的风险；标准指标缓存只减少重复计算，不改变目标函数。两类解都贴近CCT下界，说明色温边界是主要敏感参数：若工程标准收紧下界，最优权重和主目标值将随之变化，应重新求解而不能直接沿用表4。
+
+\subsection{8.3 动态拟合的结构性误差}
+
+08:30～18:30的归一化SPD RMSE维持在0.001419～0.001558，19:30升至0.002082；CCT误差始终约108～137 K，而mel-DER误差约0.056～0.096。误差随暮光阶段增大且集中于特定波段，符合“基光谱张成空间不足”而非“优化器随机失稳”的特征。最大权重步长也在同一时刻出现，为硬件通道扩展提供了直接依据。
+
+\subsection{8.4 小样本统计的不确定性}
+
+Kendall's W对样本规模作了归一化，配对bootstrap直接在被试差值层面保留重复测量结构。N3的A-C均值差置信区间不跨0，与Holm校正结论一致；但其方向依赖A/B/C映射，且只有11名被试。故映射核对和独立重复实验比继续增加小数位更能提升证据强度。
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccc}
+\toprule
+来源 & 可能影响 & 本文控制 & 后续改进 \\
+\midrule
+SPD单位标注不一致 & 绝对量解释偏差 & 采用比例不变量 & 实灯辐照度标定 \\
+标准函数/插值版本 & 指标末位差异 & 统一1 nm网格 & 锁定标准数据版本 \\
+非凸优化 & 局部最优 & 多初值+可行性筛选 & 全局-局部混合搜索 \\
+五通道基底有限 & 暮光重构偏差 & 多目标诊断 & 增加琥珀/深红通道 \\
+条件映射缺失 & 统计方向改变 & 显式假设 & 核对实验日志 \\
+n=11且随机数据 & 效应不稳定 & 配对检验+CI & 预注册真实交叉实验 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\section{九、模型评价与推广}
+
+\subsection{9.1 模型优点}
+
+统一性：以SPD为共同接口，把综合色度、显色、节律与睡眠证据放在同一条可审计链路中，避免只用CCT代表全部光谱效应。
+
+标准性：核心指标分别遵循CIE 1931、CIE 1960 UCS、TM-30与CIE S 026；没有用普通RGB距离或经验蓝光比例冒充标准指标。
+
+可实现性：权重非负且归一化，动态模型还包含平滑项，输出可直接转化为通道相对驱动指令。
+
+统计严谨性：使用被试内非参数检验、多重比较校正、效应量和置信区间，并明确区分光谱目标与睡眠疗效。
+
+可复现性：所有关键结果均由附件原始数据重新计算，逐时权重、诊断量和统计表在附录中完整列出。
+
+\subsection{9.2 模型局限}
+
+硬件线性假设：未显式建模通道热漂移、PWM非线性、光学混光损耗与老化；实灯应用需要闭环光谱传感。
+
+目标权重经验性：问题三的多目标系数体现工程取舍，不是唯一真值；不同应用应根据照明标准或用户偏好重新标定。
+
+绝对照度缺失：归一化SPD只能解决光谱比例，不能直接给出照度、melanopic EDI和光生物安全剂量。
+
+睡眠证据边界：条件映射缺失、样本量小且数据随机生成，不能形成临床因果结论。
+
+\subsection{9.3 推广应用}
+
+模型可推广到办公室、教室、医院、养老空间与长期封闭环境。工程上只需替换通道基光谱、场景约束和目标时间序列，即可生成新的配光方案。若引入个人作息、昼夜相位与实时照度，问题四的统计模块还可升级为个体化响应模型，形成“光谱设计—暴露监测—睡眠反馈—权重更新”的闭环系统。
+
+\section{十、结论}
+
+（1）建立了标准化光谱指标计算链。实测LED的CCT为3903.03 K、Duv为-0.001017、Rf为91.79、Rg为106.08、mel-DER为0.6407，实现视觉质量与节律刺激的联合刻画。
+
+（2）获得满足硬约束的日间和夜间配方。日间Rf达到92.86；夜间在Rf=88.70下把mel-DER降至0.3668。边界解说明CCT下限是当前通道组合的重要敏感参数。
+
+（3）形成08:30～19:30的全天控制序列。平均归一化SPD RMSE为0.001498，平均CCT绝对误差为111.73 K；暮光阶段误差与权重步长同时增大，定位了五通道基底的结构性不足。
+
+（4）完成符合重复测量结构的睡眠统计。仅N3比例总体显著，且校正后A-C差异方向有利于黑暗；现有数据不支持优化光照全面改善睡眠。
+
+（5）模型的主要价值在于把“标准指标、约束配方、动态控制、证据检验”贯通，并对单位、时间区间、条件映射和随机数据的解释边界作出可审计说明。
+
+\section{十一、AI工具使用说明}
+
+在作者对原始数据、标准口径和数值结果逐项复核的前提下，本文使用智能工具辅助代码检查、图表规范化、语言整理和版式排查。核心模型选择、参数边界、数据解释与最终结论由作者负责核验；未使用智能工具生成或补造实验数据、参考文献和未经复算的结果。
+
+\section{参考文献}
+
+[1] 张浩, 徐海松. 光源相关色温算法的比较研究[J]. 光学仪器, 2006(01):54-58.
+
+[2] Royer M P. Tutorial: Background and guidance for using the ANSI/IES TM-30 method for evaluating light source color rendition[J]. LEUKOS, 2022, 18(2):191-231.
+
+[3] Schlangen L J M, et al. Report on the Workshop Use and Application of the New CIE S 026/E:2018[M]. Vienna: CIE, 2019:114-118.
+
+[4] 常雪松. 可调色温高显色pc-LED光源设计[D]. 大连工业大学, 2023.
+
+[5] 李月. 光源相关色温及色偏差计算方法研究[D]. 辽宁科技大学, 2023.
+
+[6] 李宁. LED混光的光视效能及显色性评估研究[D]. 北京大学, 2014.
+
+[7] Zhang J, et al. Blue light hazard optimization for white light-emitting diode sources with high luminous efficacy of radiation and high color rendering index[J]. Optics \& Laser Technology, 2017, 94:193-198.
+
+[8] CIE. CIE 1931 colour-matching functions, 2 degree observer[DS]. Vienna: CIE, 2019. DOI:10.25039/CIE.DS.xvudnb9b.
+
+[9] CIE. CIE alpha-opic action spectra[DS]. Vienna: CIE, 2018. DOI:10.25039/CIE.DS.vqqhzp5a.
+
+[10] CIE. Spectral radiance factors of 99 test samples for the CIE colour fidelity index calculation, 1 nm wavelength steps[DS]. Vienna: CIE, 2017. DOI:10.25039/CIE.DS.8svs5rqd.
+
+[11] CIE. CIE standard illuminant D65[DS]. Vienna: CIE, 2019. DOI:10.25039/CIE.DS.hjfjmt59.
+
+[12] Luo M R, Cui G, Li C. Uniform colour spaces based on CIECAM02 colour appearance model[J]. Color Research \& Application, 2006, 31(4):320-330. DOI:10.1002/col.20227.
+
+\section{附录}
+
+\subsection{附录A  核心算法伪代码}
+
+\begin{quote}\small
+A1  标准指标计算器 for each candidate SPD S($\lambda$):     align S, CMFs, V($\lambda$), s\_mel($\lambda$) on 380:1:780 nm     integrate XYZ and convert to x,y,u,v     locate nearest point on Planckian locus -> CCT, Duv     evaluate 99 CES in CAM02-UCS -> Rf, Rg     integrate melanopic/photopic ratio relative to D65 -> mel-DER return CCT, Duv, Rf, Rg, mel-DER A2  多初值约束优化 best = None for w0 in physically\_feasible\_starts:     result = SLSQP(objective, w0, bounds=[0,1], constraints=C)     metrics = standard\_metric\_engine(channel\_SPD @ result.x)     if feasible(result.x, metrics) and better(result, best): best=result assert best is not None return best.x, standard\_metric\_engine(channel\_SPD @ best.x) A3  重复测量统计 for subject in 1..11 and condition in A,B,C:     compute TST, SE, SOL, N3\%, REM\%, Awakenings from 30-s stages for endpoint in six\_endpoints:     chi2, p = Friedman(A, B, C); W = chi2 / (11 * 2)     if p < 0.05:         run pairwise two-sided Wilcoxon tests         adjust three p-values by Holm method         bootstrap paired mean differences and calculate rank-biserial r
+\end{quote}
+
+\subsection{附录B  全天逐时权重与诊断}
+
+表B1  08:30～19:30五通道控制权重
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccccccc}
+\toprule
+时刻 & Blue & Green & Red & Warm White & Cold White & 合成CCT/K & SPD RMSE \\
+\midrule
+08:30 & 0.2510 & 0.1383 & 0.0000 & 0.1377 & 0.4730 & 5381.6 & 0.001419 \\
+09:30 & 0.2593 & 0.1327 & 0.0000 & 0.1283 & 0.4798 & 5489.5 & 0.001423 \\
+10:30 & 0.2659 & 0.1275 & 0.0000 & 0.1198 & 0.4868 & 5590.5 & 0.001427 \\
+11:30 & 0.2719 & 0.1231 & 0.0000 & 0.1124 & 0.4926 & 5684.7 & 0.001432 \\
+12:30 & 0.2775 & 0.1185 & 0.0000 & 0.1054 & 0.4985 & 5776.0 & 0.001437 \\
+13:30 & 0.2725 & 0.1220 & 0.0000 & 0.1117 & 0.4938 & 5691.3 & 0.001434 \\
+14:30 & 0.2671 & 0.1254 & 0.0000 & 0.1185 & 0.4890 & 5603.0 & 0.001433 \\
+15:30 & 0.2618 & 0.1295 & 0.0000 & 0.1264 & 0.4824 & 5508.2 & 0.001431 \\
+16:30 & 0.2549 & 0.1341 & 0.0000 & 0.1353 & 0.4756 & 5405.3 & 0.001429 \\
+17:30 & 0.2506 & 0.1360 & 0.0000 & 0.1482 & 0.4652 & 5264.3 & 0.001466 \\
+18:30 & 0.2381 & 0.1411 & 0.0000 & 0.1804 & 0.4404 & 4945.3 & 0.001558 \\
+19:30 & 0.1554 & 0.1798 & 0.0000 & 0.4058 & 0.2591 & 3601.0 & 0.002082 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+注：各时刻权重和为1；极小于10⁻⁴的Red权重显示为0.0000。
+
+表B2  逐时综合色度、节律指标与平滑诊断
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lccccccc}
+\toprule
+时刻 & 目标CCT & 合成CCT & 目标Duv & 合成Duv & 目标mel-DER & 合成mel-DER & 权重步长 \\
+\midrule
+08:30 & 5270.9 & 5381.6 & 0.002775 & 0.001989 & 0.8828 & 0.7942 & 0.0000 \\
+09:30 & 5380.3 & 5489.5 & 0.002385 & 0.001619 & 0.8954 & 0.8045 & 0.0154 \\
+10:30 & 5482.3 & 5590.5 & 0.002039 & 0.001299 & 0.9068 & 0.8139 & 0.0139 \\
+11:30 & 5577.6 & 5684.7 & 0.001729 & 0.001013 & 0.9170 & 0.8223 & 0.0120 \\
+12:30 & 5666.9 & 5776.0 & 0.001450 & 0.000757 & 0.9263 & 0.8304 & 0.0117 \\
+13:30 & 5583.9 & 5691.3 & 0.001627 & 0.000905 & 0.9178 & 0.8231 & 0.0100 \\
+14:30 & 5494.6 & 5603.0 & 0.001825 & 0.001081 & 0.9085 & 0.8154 & 0.0105 \\
+15:30 & 5398.4 & 5508.2 & 0.002046 & 0.001269 & 0.8982 & 0.8067 & 0.0123 \\
+16:30 & 5294.5 & 5405.3 & 0.002295 & 0.001515 & 0.8866 & 0.7970 & 0.0139 \\
+17:30 & 5153.4 & 5264.3 & 0.001896 & 0.001104 & 0.8720 & 0.7841 & 0.0172 \\
+18:30 & 4833.2 & 4945.3 & 0.001150 & 0.000293 & 0.8369 & 0.7530 & 0.0429 \\
+19:30 & 3463.7 & 3601.0 & 0.001230 & 0.000041 & 0.6350 & 0.5792 & 0.3033 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{附录C  睡眠统计完整结果}
+
+表C1  描述性统计（均值、标准差与中位数）
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccc}
+\toprule
+条件 & 终点 & 均值 & 标准差 & 中位数 \\
+\midrule
+A & TST/min & 366.864 & 49.704 & 360.500 \\
+A & SE/\% & 85.722 & 8.072 & 88.337 \\
+A & SOL/min & 20.136 & 12.081 & 16.000 \\
+A & N3/\% & 19.014 & 4.399 & 18.733 \\
+A & REM/\% & 25.279 & 7.073 & 26.214 \\
+A & 觉醒次数 & 14.727 & 3.467 & 14.000 \\
+B & TST/min & 379.136 & 58.961 & 386.000 \\
+B & SE/\% & 87.479 & 9.289 & 90.043 \\
+B & SOL/min & 21.727 & 24.561 & 13.000 \\
+B & N3/\% & 19.393 & 7.122 & 20.198 \\
+B & REM/\% & 26.822 & 7.460 & 26.792 \\
+B & 觉醒次数 & 14.182 & 4.729 & 13.000 \\
+C & TST/min & 359.682 & 53.302 & 365.000 \\
+C & SE/\% & 88.356 & 8.066 & 91.678 \\
+C & SOL/min & 10.409 & 16.047 & 5.000 \\
+C & N3/\% & 24.663 & 4.954 & 25.977 \\
+C & REM/\% & 21.203 & 7.349 & 21.614 \\
+C & 觉醒次数 & 13.818 & 4.813 & 12.000 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+注：所有统计量均由33条原始睡眠分期记录逐条计算。
+
+表C2  N3比例成对效应的完整统计量
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcccccc}
+\toprule
+比较 & Wilcoxon W & 原始p & Holm p & 均值差 & 95\% CI & 秩二列r \\
+\midrule
+A-B & 29.0 & 0.764648 & 0.764648 & -0.379 & [-5.458, 4.822] & -0.121 \\
+A-C & 4.0 & 0.006836 & 0.020508 & -5.649 & [-8.846, -2.353] & -0.879 \\
+B-C & 14.0 & 0.101562 & 0.203125 & -5.270 & [-9.950, -0.655] & -0.576 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{附录D  数据与结果自检清单}
+
+表D1  终稿复现与一致性检查
+
+\begin{table}[H]
+\centering
+\small
+\begin{adjustbox}{max width=\textwidth}
+\begin{tabular}{lcc}
+\toprule
+检查项 & 检查结果 & 状态 \\
+\midrule
+波长网格 & 380～780 nm，1 nm间隔，共401点 & 通过 \\
+光谱单位 & 以相对SPD处理，未推断绝对辐照度 & 已披露 \\
+问题三时段 & 按题面使用08:30～19:30，共12时刻 & 通过 \\
+标准指标 & CCT/Duv、TM-30、CIE S 026统一计算 & 通过 \\
+静态优化约束 & 两种场景非负、归一化及全部指标约束满足 & 通过 \\
+动态权重 & 每行非负且和为1，报告最大相邻步长 & 通过 \\
+睡眠记录 & 11名被试×3条件=33条记录 & 通过 \\
+统计结构 & Friedman→Wilcoxon-Holm→效应量/CI & 通过 \\
+条件映射 & Night 1=A、Night 2=B、Night 3=C & 待日志核对 \\
+数据性质 & 题目随机生成数据，不作临床外推 & 已披露 \\
+图件 & 5张多面板图均含PDF/SVG/PNG/TIFF版本 & 通过 \\
+图中文字 & PDF最小字号5.8 pt以上 & 通过 \\
+\bottomrule
+\end{tabular}
+\end{adjustbox}
+\end{table}
+
+\subsection{附录E  关键结果复核摘要}
+
+问题一复核：CCT=3903.0304 K，Duv=-0.0010170，Rf=91.7909，Rg=106.0795，mel-DER=0.640744。
+
+问题二复核：日间w=[0.150422,0.170640,0.240934,0.009587,0.428418]；夜间w=[0,0.113137,0,0.886863,0]。两组权重均满足非负与归一化。
+
+问题三复核：平均/最大归一化SPD RMSE为0.001498/0.002082；平均/最大CCT绝对误差为111.73/137.31 K；平均/最大mel-DER绝对误差为0.08829/0.09582。
+
+问题四复核：只有N3比例Friedman总体p<0.05；A-C的Holm校正p=0.02051，均值差为-5.649个百分点，bootstrap 95\% CI=[-8.846,-2.353]。
+
+\clearpage
+
+\section*{附录F 对应Python程序}
+
+\addcontentsline{toc}{section}{附录F 对应Python程序}
+
+\lstinputlisting[caption={用户提供的完整工程主程序 solve\_C\_modern.py},label={lst:solve}]{code/solve\_C\_modern.py}
+
+\section*{附录G 正文标准口径复核代码}
+
+正文采用CIE 1960 UCS普朗克轨迹、ANSI/IES TM-30-18及小样本配对推断的标准口径；对应复核实现见项目目录中的 analysis\_pipeline.py。
+
+\lstinputlisting[caption={标准指标与重复测量统计复核程序},label={lst:audit}]{code/analysis\_pipeline.py}
+
+\end{document}
